@@ -3,7 +3,7 @@ const express = require('express')
 var cors = require('cors')
 const app = express()
 var jwt = require('jsonwebtoken');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
 
 app.use(cors({
@@ -43,14 +43,14 @@ async function run() {
 
     // Verify Token
     const verifyToken = (req, res, next) => {
-      console.log("Request Interceptor token:",req?.headers?.authorization)
+      console.log("Request Interceptor token:", req?.headers?.authorization)
       if (!req?.headers?.authorization) {
         return res.status(401).send({ message: 'unAuthorization Access' })
       }
 
       const token = req.headers.authorization.split(' ')[1]
       jwt.verify(token, `${process.env.SECRET_TOKEN}`, function (err, decoded) {
-        if(err){
+        if (err) {
           return res.status(401).send({ message: 'unAuthorization Access' })
         }
         req.decoded = decoded
@@ -64,61 +64,68 @@ async function run() {
     })
 
     // Admin Check api
-    app.get('/users/admin/:email',async (req, res) => {
-        const email = req?.params?.email
-        // if(email !== req?.decoded?.email){
-        //   return res.status(403).send({ message: 'Forbidden Access' })
-        // }
+    app.get('/users/admin/:email', async (req, res) => {
+      const email = req?.params?.email
+      // if(email !== req?.decoded?.email){
+      //   return res.status(403).send({ message: 'Forbidden Access' })
+      // }
 
-        const query = {email: email}
-        const user = await userCollection.findOne(query)
-        let isAdmin = false;
+      const query = { email: email }
+      const user = await userCollection.findOne(query)
+      let isAdmin = false;
 
-        if(user){
-          isAdmin = user?.role == 'Admin'
-        }
-        res.send({isAdmin})
+      if (user) {
+        isAdmin = user?.role == 'Admin'
+      }
+      res.send({ isAdmin })
     })
 
     // deliveryMen Check api
-    app.get('/users/deliveryMen/:email',async (req, res) => {
-        const email = req?.params?.email
-        // if(email !== req?.decoded?.email){
-        //   return res.status(403).send({ message: 'Forbidden Access' })
-        // }
+    app.get('/users/deliveryMen/:email', async (req, res) => {
+      const email = req?.params?.email
+      // if(email !== req?.decoded?.email){
+      //   return res.status(403).send({ message: 'Forbidden Access' })
+      // }
 
-        const query = {email: email}
-        const user = await userCollection.findOne(query)
-        let isDeliveryMen = false;
+      const query = { email: email }
+      const user = await userCollection.findOne(query)
+      let isDeliveryMen = false;
 
-        if(user){
-          isDeliveryMen = user?.role == 'DeliveryMen'
-        }
-        res.send({isDeliveryMen})
+      if (user) {
+        isDeliveryMen = user?.role == 'DeliveryMen'
+      }
+      res.send({ isDeliveryMen })
     })
 
     // user Check api
-    app.get('/users/user/:email',async (req, res) => {
-        const email = req?.params?.email
-        // if(email !== req?.decoded?.email){
-        //   return res.status(403).send({ message: 'Forbidden Access' })
-        // }
+    app.get('/users/user/:email', async (req, res) => {
+      const email = req?.params?.email
+      // if(email !== req?.decoded?.email){
+      //   return res.status(403).send({ message: 'Forbidden Access' })
+      // }
 
-        const query = {email: email}
-        const user = await userCollection.findOne(query)
-        let isUser= false;
+      const query = { email: email }
+      const user = await userCollection.findOne(query)
+      let isUser = false;
 
-        if(user){
-          isUser = user?.role == 'User'
-        }
-        res.send({isUser})
+      if (user) {
+        isUser = user?.role == 'User'
+      }
+      res.send({ isUser })
     })
 
-    app.get('/bookedParcel',async(req,res)=>{
+    app.get('/bookedParcel', async (req, res) => {
       const bookedData = req.body
       const result = await BookedParcelDB.find(bookedData).toArray()
       res.send(result)
     })
+
+    // app.get('/manageParcel/:id',async(req,res)=>{
+    //   const parcelId = req.params.id
+    //   const query = {_id: new ObjectId(parcelId)}
+    //   const result = await BookedParcelDB.findOne(query)
+    //   res.send(result)
+    // })
 
     app.post('/users', async (req, res) => {
       const userData = req.body
@@ -131,10 +138,33 @@ async function run() {
       res.send(result)
     })
 
-    app.post('/bookedParcel',async(req,res)=>{
+    app.post('/bookedParcel', async (req, res) => {
       const bookedData = req.body
       const result = await BookedParcelDB.insertOne(bookedData)
       res.send(result)
+    })
+
+    app.patch('/updateBookedParcel/update/:id', async (req, res) => {
+      const parcel = req.body
+      console.log("data:",parcel)
+      const parcelId = req.params.id
+      const query = { _id: new ObjectId(parcelId)}
+      const updateDoc = {
+        $set: {
+          phone: parcel.phone,
+          parcelType: parcel.parcelType,
+          parcelWeight: parcel.parcelWeight,
+          receiverName: parcel.receiverName,
+          receiverPhone: parcel.receiverPhone,
+          deliveryAddress: parcel.deliveryAddress,
+          deliveryDate: parcel.deliveryDate,
+          latitude: parcel.latitude,
+          longitude: parcel.longitude,
+          price: parcel.price
+        }
+      }
+      const updateResult = await BookedParcelDB.updateOne(query,updateDoc)
+      res.send(updateResult)
     })
 
     app.listen(port, () => {
