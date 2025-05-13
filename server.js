@@ -120,12 +120,32 @@ async function run() {
       res.send(result)
     })
 
+    app.get('/bookedMyParcel/:email', async (req, res) => {
+      const email = req.params.email
+      const query = {email:email}
+      const bookedMyParcel = await BookedParcelDB.find(query).toArray()
+      res.send(bookedMyParcel)
+    })
+
+    app.get('/allDeliveryMen',async (req,res)=>{
+      const query = {role:'DeliveryMen'}
+      const findAllDeliveryMen = await userCollection.find(query).toArray()
+      res.send(findAllDeliveryMen)
+    })
+
     // app.get('/manageParcel/:id',async(req,res)=>{
     //   const parcelId = req.params.id
     //   const query = {_id: new ObjectId(parcelId)}
     //   const result = await BookedParcelDB.findOne(query)
     //   res.send(result)
     // })
+
+    app.get('/users/:email', async (req, res) => {
+      const email = req.params.email
+      const query = {email:email}
+      const findUser = await userCollection.findOne(query)
+      res.send(findUser)
+    })
 
     app.post('/users', async (req, res) => {
       const userData = req.body
@@ -144,11 +164,11 @@ async function run() {
       res.send(result)
     })
 
+    // Updated parcel
     app.patch('/updateBookedParcel/update/:id', async (req, res) => {
       const parcel = req.body
-      console.log("data:",parcel)
       const parcelId = req.params.id
-      const query = { _id: new ObjectId(parcelId)}
+      const query = { _id: new ObjectId(parcelId) }
       const updateDoc = {
         $set: {
           phone: parcel.phone,
@@ -163,8 +183,48 @@ async function run() {
           price: parcel.price
         }
       }
-      const updateResult = await BookedParcelDB.updateOne(query,updateDoc)
+      const updateResult = await BookedParcelDB.updateOne(query, updateDoc)
       res.send(updateResult)
+    })
+
+    // User Info Update
+    app.patch('/users/update/:id',async(req,res)=>{
+      const userId = req.params.id
+      const user = req.body
+      const query = {_id: new ObjectId(userId)}
+      const updateDoc ={
+        $set: {
+          name: user.name,
+          photoURL: user.photoURL
+        }
+      }
+      const updateInfo = await userCollection.updateOne(query,updateDoc)
+      res.send(updateInfo)
+    })
+
+    // manage Parcel DeliveryMen Assign here
+    app.patch('/manageParcel/:id',async(req,res)=>{
+      const parcelId = req.params.id
+      const parcelInfo = req.body
+      console.log("ParcelInfo:",parcelInfo)
+      const query = {_id: new ObjectId(parcelId)}
+      const updateDoc ={
+        $set: {
+          status: parcelInfo.status,
+          deliveryMenId: parcelInfo.deliveryMenId,
+          approxDate: parcelInfo.approxDate
+        }
+      }
+      const updateInfo = await BookedParcelDB.updateOne(query,updateDoc,{upsert:true})
+      res.send(updateInfo)
+    })
+
+    // Delete Parcel
+    app.delete('/updateBookedParcel/update/:id', async (req, res) => {
+      const parcelId = req.params.id
+      const query = { _id: new ObjectId(parcelId) }
+      const deleteParcel = await BookedParcelDB.deleteOne(query)
+      res.send(deleteParcel)
     })
 
     app.listen(port, () => {
