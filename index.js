@@ -133,12 +133,24 @@ async function run() {
       res.send(findAllDeliveryMen)
     })
 
+    app.get('/deliveryMenParcel/:id',async(req,res)=>{
+      const menId = req.params.id
+      const query = {deliveryMenId:menId}
+      const result = await BookedParcelDB.find(query).toArray()
+      res.send(result)
+    })
+
     // app.get('/manageParcel/:id',async(req,res)=>{
     //   const parcelId = req.params.id
     //   const query = {_id: new ObjectId(parcelId)}
     //   const result = await BookedParcelDB.findOne(query)
     //   res.send(result)
     // })
+
+     app.get('/allUsers', async (req, res) => {
+      const findUser = await userCollection.find({}).toArray()
+      res.send(findUser)
+    })
 
     app.get('/users/:email', async (req, res) => {
       const email = req.params.email
@@ -206,7 +218,6 @@ async function run() {
     app.patch('/manageParcel/:id',async(req,res)=>{
       const parcelId = req.params.id
       const parcelInfo = req.body
-      console.log("ParcelInfo:",parcelInfo)
       const query = {_id: new ObjectId(parcelId)}
       const updateDoc ={
         $set: {
@@ -216,6 +227,58 @@ async function run() {
         }
       }
       const updateInfo = await BookedParcelDB.updateOne(query,updateDoc,{upsert:true})
+      res.send(updateInfo)
+    })
+
+    // Make DeliveryMen here
+    app.patch('/makeDeliveryMen/:id',async(req,res)=>{
+      const userId = req.params.id
+      const query = {_id: new ObjectId(userId)}
+      const updateDoc ={
+        $set: {
+          role: 'DeliveryMen'
+        }
+      }
+      const updateInfo = await userCollection.updateOne(query,updateDoc)
+      res.send(updateInfo)
+    })
+
+    // Make Admin here
+    app.patch('/makeAdmin/:id',async(req,res)=>{
+      const userId = req.params.id
+      const query = {_id: new ObjectId(userId)}
+      const updateDoc ={
+        $set: {
+          role: 'Admin'
+        }
+      }
+      const updateInfo = await userCollection.updateOne(query,updateDoc)
+      res.send(updateInfo)
+    })
+
+    // Status change to Cancel here
+    app.patch('/cancelStatus/:id',async(req,res)=>{
+      const parcelId = req.params.id
+      const query = {_id: new ObjectId(parcelId)}
+      const updateDoc ={
+        $set: {
+          status: 'Cancelled'
+        }
+      }
+      const updateInfo = await BookedParcelDB.updateOne(query,updateDoc)
+      res.send(updateInfo)
+    })
+
+    // Status change to Delivered here
+    app.patch('/deliveredStatus/:id',async(req,res)=>{
+      const parcelId = req.params.id
+      const query = {_id: new ObjectId(parcelId)}
+      const updateDoc ={
+        $set: {
+          status: 'Delivered'
+        }
+      }
+      const updateInfo = await BookedParcelDB.updateOne(query,updateDoc)
       res.send(updateInfo)
     })
 
@@ -233,7 +296,7 @@ async function run() {
 
 
     // await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
