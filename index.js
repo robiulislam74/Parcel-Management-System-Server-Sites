@@ -141,6 +141,14 @@ async function run() {
       res.send(result)
     })
 
+    // Get a single parcel
+    app.get('/singleParcel/:id',async(req,res)=>{
+      const parcelId = req.params.id
+      const query = {_id: new ObjectId(parcelId)}
+      const result = await BookedParcelDB.findOne(query)
+      res.send(result)
+    })
+
     // app.get('/manageParcel/:id',async(req,res)=>{
     //   const parcelId = req.params.id
     //   const query = {_id: new ObjectId(parcelId)}
