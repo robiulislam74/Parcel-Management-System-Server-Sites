@@ -31,6 +31,7 @@ const client = new MongoClient(uri, {
 async function run() {
   const userCollection = client.db('parcelProDB').collection('users')
   const BookedParcelDB = client.db('parcelProDB').collection('bookedParcel')
+  const reviewCollections = client.db('parcelProDB').collection('Reviews')
   try {
 
     // jwt related API
@@ -167,6 +168,13 @@ async function run() {
       const findUser = await userCollection.findOne(query)
       res.send(findUser)
     })
+    // All reviews get
+    app.get('/allReviews/:id',async(req,res)=>{
+      const deliveryManId = req.params.id
+      const query = {deliveryMenId:deliveryManId}
+      const reviews = await reviewCollections.find(query).toArray()
+      res.send(reviews)
+    })
 
     app.post('/users', async (req, res) => {
       const userData = req.body
@@ -182,6 +190,13 @@ async function run() {
     app.post('/bookedParcel', async (req, res) => {
       const bookedData = req.body
       const result = await BookedParcelDB.insertOne(bookedData)
+      res.send(result)
+    })
+
+    // Reviews post
+    app.post('/reviews',async(req,res)=>{
+      const reviewInfo = req.body
+      const result = await reviewCollections.insertOne(reviewInfo)
       res.send(result)
     })
 
